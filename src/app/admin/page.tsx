@@ -34,7 +34,7 @@ export default function AdminPage() {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ password, cookiesText })
+                body: JSON.stringify({ password, cookiesText, userAgent: navigator.userAgent })
             });
             const data = await res.json();
             if (data.success) {

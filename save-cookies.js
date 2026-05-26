@@ -45,7 +45,10 @@ const fs = require('fs');
             const sessionid = cookies.find(c => c.name === 'sessionid');
             if (sessionid) {
                 fs.writeFileSync('cookies.json', JSON.stringify(cookies, null, 2));
+                const userAgent = await page.evaluate(() => navigator.userAgent);
+                fs.writeFileSync('userAgent.txt', userAgent);
                 console.log("\n✅ Login detected! Cookies saved successfully to cookies.json!");
+                console.log(`Saved User-Agent to userAgent.txt: ${userAgent}`);
                 loggedIn = true;
             } else {
                 await new Promise(r => setTimeout(r, 2000)); // check every 2 seconds

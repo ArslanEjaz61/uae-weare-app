@@ -18,21 +18,37 @@ const HASHTAGS = [
     "MYEIDINUAE"
 ];
 
-// Helper to get cookies string and CSRF token from cookies.json
+// Helper to get cookies string, CSRF token, and User-Agent
 function getCookiesData() {
+    let cookieStr = '';
+    let csrf = '';
+    let userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'; // Default fallback
+
     try {
         const cookiesPath = path.join(process.cwd(), 'cookies.json');
         if (fs.existsSync(cookiesPath)) {
             const cookiesData = fs.readFileSync(cookiesPath, 'utf8');
             const cookiesArray = JSON.parse(cookiesData);
-            const cookieStr = cookiesArray.map((c: any) => `${c.name}=${c.value}`).join('; ');
-            const csrf = cookiesArray.find((c: any) => c.name === 'csrftoken')?.value || '';
-            return { cookieStr, csrf };
+            cookieStr = cookiesArray.map((c: any) => `${c.name}=${c.value}`).join('; ');
+            csrf = cookiesArray.find((c: any) => c.name === 'csrftoken')?.value || '';
         }
     } catch (e) {
         console.log("Could not read cookies.json", e);
     }
-    return { cookieStr: '', csrf: '' };
+
+    try {
+        const uaPath = path.join(process.cwd(), 'userAgent.txt');
+        if (fs.existsSync(uaPath)) {
+            const uaData = fs.readFileSync(uaPath, 'utf8').trim();
+            if (uaData) {
+                userAgent = uaData;
+            }
+        }
+    } catch (e) {
+        console.log("Could not read userAgent.txt", e);
+    }
+
+    return { cookieStr, csrf, userAgent };
 }
 
 // Recursively find all media objects in Instagram's JSON response
@@ -54,14 +70,14 @@ function findMediaObjects(obj: any, results: any[] = []): any[] {
 // Scrape Instagram hashtag page directly using cookies and the modern API endpoint
 async function scrapeHashtag(tag: string): Promise<any[]> {
     try {
-        const { cookieStr, csrf } = getCookiesData();
+        const { cookieStr, csrf, userAgent } = getCookiesData();
         const appId = '936619743392459'; // Instagram Web App ID
         const url = `https://www.instagram.com/api/v1/tags/web_info/?tag_name=${tag}`;
         
         console.log(`Scraping API for hashtag #${tag}...`);
         const response = await fetch(url, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'User-Agent': userAgent,
                 'Accept': '*/*',
                 'Accept-Language': 'en-US,en;q=0.5',
                 'X-IG-App-ID': appId,
@@ -115,12 +131,12 @@ async function scrapeHashtag(tag: string): Promise<any[]> {
 // Alternative: scrape via Instagram's web page HTML (fallback)
 async function scrapeHashtagFromHTML(tag: string): Promise<any[]> {
     try {
-        const { cookieStr } = getCookiesData();
+        const { cookieStr, userAgent } = getCookiesData();
         
         const url = `https://www.instagram.com/explore/tags/${tag}/`;
         const response = await fetch(url, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'User-Agent': userAgent,
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.5',
                 ...(cookieStr ? { 'Cookie': cookieStr } : {})
@@ -193,14 +209,14 @@ async function scrapeHashtagFromHTML(tag: string): Promise<any[]> {
 // Scrape Instagram tagged posts (usertags) feed directly using cookies
 async function scrapeUsertags(userId: string): Promise<any[]> {
     try {
-        const { cookieStr, csrf } = getCookiesData();
+        const { cookieStr, csrf, userAgent } = getCookiesData();
         const appId = '936619743392459'; // Instagram Web App ID
         const url = `https://www.instagram.com/api/v1/usertags/${userId}/feed/`;
         
         console.log(`Scraping usertags feed for user ID ${userId}...`);
         const response = await fetch(url, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'User-Agent': userAgent,
                 'Accept': '*/*',
                 'Accept-Language': 'en-US,en;q=0.5',
                 'X-IG-App-ID': appId,

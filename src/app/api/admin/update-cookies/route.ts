@@ -4,7 +4,7 @@ import path from 'path';
 
 export async function POST(request: Request) {
     try {
-        const { password, cookiesText } = await request.json();
+        const { password, cookiesText, userAgent } = await request.json();
 
         // Check password
         const adminPassword = process.env.ADMIN_PASSWORD || 'uaeweare2026';
@@ -55,6 +55,11 @@ export async function POST(request: Request) {
         // Save to cookies.json
         const cookiesPath = path.join(process.cwd(), 'cookies.json');
         fs.writeFileSync(cookiesPath, JSON.stringify(parsedCookies, null, 2));
+
+        if (userAgent) {
+            const uaPath = path.join(process.cwd(), 'userAgent.txt');
+            fs.writeFileSync(uaPath, userAgent.trim());
+        }
 
         return NextResponse.json({ 
             success: true, 

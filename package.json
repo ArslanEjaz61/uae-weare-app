@@ -9,7 +9,13 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "apify-client": "^2.23.3",
+    "instatouch": "^2.3.22",
+    "lucide-react": "^1.16.0",
     "next": "16.2.6",
+    "prisma": "^5.22.0",
+    "puppeteer": "^25.1.0",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
